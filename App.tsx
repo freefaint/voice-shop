@@ -6,13 +6,10 @@ import {
   Image,
   TouchableHighlight,
   ScrollView,
-  ImageSourcePropType,
 } from 'react-native';
 
 import Voice, {
-  SpeechRecognizedEvent,
   SpeechResultsEvent,
-  SpeechErrorEvent,
 } from '@react-native-community/voice';
 
 type Props = {};
@@ -183,21 +180,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#F5FCFF',
   },
-  welcome: {
-    fontSize: 20,
-    textAlign: 'center',
-    margin: 10,
-  },
   action: {
     textAlign: 'center',
     color: '#0000FF',
     marginVertical: 5,
     fontWeight: 'bold',
-  },
-  instructions: {
-    textAlign: 'center',
-    color: '#333333',
-    marginBottom: 5,
   },
   stat: {
     textAlign: 'center',
