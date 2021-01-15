@@ -6,6 +6,7 @@ import {
   Image,
   TouchableHighlight,
   ScrollView,
+  CheckBox,
 } from 'react-native';
 
 import Voice, {
@@ -15,10 +16,13 @@ import Voice, {
 type Props = {};
 type State = {
   results?: string[];
+  showText: boolean;
   partialResults?: string[];
 };
 
-const products: Array<{ name: string; names: string[], img: string }> = [
+interface IProduct { name: string; names: string[], img: string, pos?: number };
+
+const products: Array<IProduct> = [
   {
     name: "Грибы",
     names: [ "грибы", "мухомор" ],
@@ -36,7 +40,7 @@ const products: Array<{ name: string; names: string[], img: string }> = [
   },
   {
     name: "Рыба",
-    names: [ "рыба", "акула", "треска" ],
+    names: [ "рыба", "акула", "треска"  ],
     img: "https://fishingday.org/wp-content/uploads/2019/02/1-18.jpg",
   },
   {
@@ -54,6 +58,7 @@ const products: Array<{ name: string; names: string[], img: string }> = [
 class App extends Component<Props, State> {
   state = {
     results: [],
+    showText: false,
     partialResults: [],
   };
 
@@ -66,7 +71,12 @@ class App extends Component<Props, State> {
   }
 
   getProducts = () => {
-    return products.filter(i => !!i.names.find(j => (this.state.results.join(", ") + ", " + this.state.partialResults.join(", ")).toLowerCase().indexOf(j) !== -1))
+    const text = (this.state.results.join(", ") + ", " + this.state.partialResults.join(", ")).toLowerCase();
+    const prods = products.filter(i => !!i.names.find(j => text.indexOf(j) !== -1));
+
+    const order = prods.map(i => ({ ...i, pos: Math.max(...i.names.map(j => text.lastIndexOf(j)).filter(k => k !== -1)) }) );
+
+    return order.sort((a, b) => a.pos > b.pos ? 1 : a.pos < b.pos ? -1 : 0);
   }
 
   componentDidMount() {
@@ -127,39 +137,55 @@ class App extends Component<Props, State> {
   render() {
     const prods = this.getProducts();
     
-    
+    let prod: IProduct | undefined = prods[prods.length - 1];
+
+    prods.map((i, j) => (
+      <View style={{ margin: 5, padding: 5, borderWidth: 1, borderColor: '#ccc' }} key={j}>
+        <Image onError={e => console.log(e)} source={{ uri: i.img }} style={{ width: 100, height: 100 }} />
+        <Text style={{ alignSelf: "center" }}>{i.name}</Text>
+      </View>
+    ));
 
     return (
       <ScrollView>
       <View style={styles.container}>
         <View style={{ display: 'flex', flexDirection: "row", flexWrap: "wrap", justifyContent: "center" }}>
-          {prods.map((i, j) => (
-            <View style={{ margin: 5, padding: 5, borderWidth: 1, borderColor: '#ccc' }} key={j}>
-              <Image onError={e => console.log(e)} source={{ uri: i.img }} style={{ width: 100, height: 100 }} />
-              <Text style={{ alignSelf: "center" }}>{i.name}</Text>
+          {prod && (
+            <View style={{ margin: 5, padding: 5, borderWidth: 1, borderColor: '#ccc' }}>
+              <Image onError={e => console.log(e)} source={{ uri: prod.img }} style={{ width: 360, height: 360 }} />
+              <Text style={{ alignSelf: "center" }}>{prod.name}</Text>
             </View>
-          ))}
+          )}
         </View>
-        <Text style={styles.stat}>Results</Text>
-        {this.state.results.map((result, index) => {
-          return (
-            <Text key={`result-${index}`} style={styles.stat}>
-              {result}
-            </Text>
-          );
-        })}
-        <Text style={styles.stat}>Partial Results</Text>
-        {this.state.partialResults.map((result, index) => {
-          return (
-            <Text key={`partial-result-${index}`} style={styles.stat}>
-              {result}
-            </Text>
-          );
-        })}
+        {this.state.showText && (
+          <>
+            <Text style={styles.stat}>Results</Text>
+            {this.state.results.map((result, index) => {
+              return (
+                <Text key={`result-${index}`} style={styles.stat}>
+                  {result}
+                </Text>
+              );
+            })}
+            <Text style={styles.stat}>Partial Results</Text>
+            {this.state.partialResults.map((result, index) => {
+              return (
+                <Text key={`partial-result-${index}`} style={styles.stat}>
+                  {result}
+                </Text>
+              );
+            })}
+          </>
+        )}
         
         <TouchableHighlight onPress={this._startRecognizing}>
           <Image style={styles.button} source={require('./button.png')} />
         </TouchableHighlight>
+
+        <View style={{ display: "flex", flexDirection: "row", alignItems: "center" }}>
+          <CheckBox value={this.state.showText} onChange={() => this.setState(state => ({ showText: !state.showText}))} /><Text>Показывать текст</Text>
+        </View>
+
         <TouchableHighlight onPress={this._cancelRecognizing}>
           <Text style={styles.action}>Cancel</Text>
         </TouchableHighlight>
